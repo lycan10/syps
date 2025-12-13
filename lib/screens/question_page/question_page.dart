@@ -4,6 +4,9 @@ import 'package:animations/animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../service/app_provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../components/ad_banner.dart';
+import '../../service/ad_service.dart';
 import '../../theme/theme.dart';
 import '../drink_roulette/drink_roulette.dart';
 
@@ -25,13 +28,74 @@ class _QuestionsPageState extends State<QuestionsPage> {
   bool _firstQuestion = true;
 
   @override
+  dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+  InterstitialAd? _interstitialAd;
+
+  @override
   void initState() {
     super.initState();
     _questions = _getQuestionsForCategory(widget.category);
     _groupQuestions = _getGroupQuestions();
+    _loadInterstitialAd();
 
     // Show the first question WITHOUT triggering roulette
     _setNextQuestion(first: true);
+  }
+
+  void _loadInterstitialAd() {
+    AdService().loadInterstitial(
+      onAdLoaded: (ad) {
+        _interstitialAd = ad;
+        _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+          onAdDismissedFullScreenContent: (ad) {
+            ad.dispose();
+            _navigateToRoulette();
+            _loadInterstitialAd(); // Load next ad
+          },
+          onAdFailedToShowFullScreenContent: (ad, error) {
+            ad.dispose();
+            _navigateToRoulette();
+            _loadInterstitialAd();
+          },
+        );
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('InterstitialAd failed to load: $error');
+      },
+    );
+  }
+
+  Future<void> _navigateToRoulette() async {
+      final selectedPlayer = await Navigator.of(context).push(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 600),
+          pageBuilder:
+              (context, animation, secondaryAnimation) =>
+              DrinkRoulettePage(color: _getCategoryColor(widget.category)),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SharedAxisTransition(
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              transitionType: SharedAxisTransitionType.scaled,
+              child: child,
+            );
+          },
+        ),
+      );
+
+      if (selectedPlayer != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _displayedPlayer = selectedPlayer;
+              _currentIndex = _random.nextInt(_questions.length);
+            });
+          }
+        });
+      }
   }
 
   /// Individual questions for each category
@@ -404,30 +468,11 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
     // 🎲 Open roulette only after first question
     if (goToRoulette) {
-      final selectedPlayer = await Navigator.of(context).push(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder:
-              (context, animation, secondaryAnimation) =>
-                  DrinkRoulettePage(color: _getCategoryColor(widget.category)),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SharedAxisTransition(
-              animation: animation,
-              secondaryAnimation: secondaryAnimation,
-              transitionType: SharedAxisTransitionType.scaled,
-              child: child,
-            );
-          },
-        ),
-      );
-
-      if (selectedPlayer != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          setState(() {
-            _displayedPlayer = selectedPlayer;
-            _currentIndex = _random.nextInt(_questions.length);
-          });
-        });
+      if (_interstitialAd != null) {
+        _interstitialAd!.show();
+        _interstitialAd = null; // Clear reference
+      } else {
+        _navigateToRoulette();
       }
       return;
     }
@@ -573,6 +618,8 @@ class _QuestionsPageState extends State<QuestionsPage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+              const AdBanner(),
             ],
           ),
         ),

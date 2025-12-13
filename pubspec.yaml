@@ -2,8 +2,7 @@ name: sips
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
@@ -18,6 +17,11 @@ dependencies:
   google_fonts: ^6.3.2
   provider: ^6.1.5+1
   animations: ^2.1.0
+  google_mobile_ads: ^6.0.0
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  flutter_timezone: ^3.0.1
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
@@ -30,15 +34,13 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
-
   assets:
-     - assets/images/
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

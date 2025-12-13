@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../components/ad_banner.dart';
+import '../../service/ad_service.dart';
 import '../../service/app_provider.dart';
 import '../../theme/theme.dart';
 
@@ -26,6 +29,10 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
   String _selectedPlayer = "Tap spin to find out! 🍸";
   bool _isSpinning = false;
 
+  InterstitialAd? _interstitialAd;
+  RewardedAd? _rewardedAd;
+  bool _canSpinAgain = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +50,74 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
         _controller.reset();
         setState(() {
           _isSpinning = false;
+          _canSpinAgain = true; // Allow spin again after spin completes
         });
       }
     });
+
+    _loadInterstitialAd();
+    _loadRewardedAd();
+  }
+
+  void _loadRewardedAd() {
+    AdService().loadRewardedAd(
+      onAdLoaded: (ad) {
+        _rewardedAd = ad;
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('RewardedAd failed to load: $error');
+      },
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedAd != null) {
+      _rewardedAd!.show(onUserEarnedReward: (ad, reward) {
+        // User earned reward: Spin again!
+        _spinRoulette();
+        // Load next rewarded ad
+        _loadRewardedAd();
+      });
+      _rewardedAd = null;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Ad not ready yet. Try again in a moment!")),
+      );
+      _loadRewardedAd(); // Try loading again if it wasn't ready
+    }
+  }
+
+  void _loadInterstitialAd() {
+    AdService().loadInterstitial(
+      onAdLoaded: (ad) {
+        _interstitialAd = ad;
+        _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+          onAdDismissedFullScreenContent: (ad) {
+            ad.dispose();
+            _proceedWithNavigation();
+          },
+          onAdFailedToShowFullScreenContent: (ad, error) {
+            ad.dispose();
+            _proceedWithNavigation();
+          },
+        );
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('InterstitialAd failed to load: $error');
+      },
+    );
+  }
+
+  void _proceedWithNavigation() {
+    final players =
+    Provider.of<AppProvider>(context, listen: false).players;
+
+    if (players.isNotEmpty) {
+      final random = players[_random.nextInt(players.length)];
+      Navigator.pop(context, random);
+    } else {
+      Navigator.pop(context, "No players yet 😅");
+    }
   }
 
   void _spinRoulette() {
@@ -61,6 +133,7 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
     setState(() {
       _isSpinning = true;
       _selectedPlayer = "Spinning...";
+      _canSpinAgain = false;
     });
 
     _controller.repeat(); // start spinning continuously
@@ -88,6 +161,8 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
   @override
   void dispose() {
     _controller.dispose();
+    _interstitialAd?.dispose();
+    _rewardedAd?.dispose();
     super.dispose();
   }
 
@@ -187,14 +262,11 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                     // Still in spin state → start spinning
                     _spinRoulette();
                   } else {
-                    final players =
-                        Provider.of<AppProvider>(context, listen: false).players;
-
-                    if (players.isNotEmpty) {
-                      final random = players[_random.nextInt(players.length)];
-                      Navigator.pop(context, random);
+                    if (_interstitialAd != null) {
+                      _interstitialAd!.show();
+                      _interstitialAd = null; // Clear reference
                     } else {
-                      Navigator.pop(context, "No players yet 😅");
+                      _proceedWithNavigation();
                     }
                   }
                 },
@@ -221,10 +293,25 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                 ),
               ),
 
+              if (_canSpinAgain && _selectedPlayer != "Tap spin to find out! 🍸") ...[
+                const SizedBox(height: 16),
+                TextButton.icon(
+                  onPressed: _showRewardedAd,
+                  icon: const Icon(Icons.refresh, color: Colors.white),
+                  label: Text(
+                    "Spin Again (Watch Ad)",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+
 
 
               const SizedBox(height: 20),
-
+              const AdBanner(),
             ],
           ),
         ),

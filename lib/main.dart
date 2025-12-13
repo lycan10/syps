@@ -4,8 +4,15 @@ import 'package:sips/service/app_provider.dart';
 import 'package:sips/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:sips/screens/onboarding/flash_screen.dart';
+import 'package:sips/service/ad_service.dart';
+import 'package:sips/service/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AdService().init();
+  await NotificationService().init();
+  await NotificationService().scheduleFridayReminder();
+
   runApp(
     MultiProvider(
       providers: [
