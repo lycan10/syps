@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sips/screens/onboarding/welcome_page.dart';
+import 'package:sips/screens/onboarding/disclaimer_screen.dart';
+
 
 class FlashScreen extends StatefulWidget {
   const FlashScreen({super.key});
@@ -20,7 +22,7 @@ class _FlashScreenState extends State<FlashScreen> {
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 1200),
-          pageBuilder: (_, animation, __) => const WelcomePage(),
+          pageBuilder: (_, animation, __) => const DisclaimerScreen(),
           transitionsBuilder: (_, animation, __, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
