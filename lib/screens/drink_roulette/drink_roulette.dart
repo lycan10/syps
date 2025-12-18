@@ -10,11 +10,9 @@ import '../../service/app_provider.dart';
 import '../../theme/theme.dart';
 
 class DrinkRoulettePage extends StatefulWidget {
-
   final Color color;
 
   const DrinkRoulettePage({super.key, required this.color});
-
 
   @override
   State<DrinkRoulettePage> createState() => _DrinkRoulettePageState();
@@ -29,7 +27,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
   String _selectedPlayer = "Tap spin to find out! 🍸";
   bool _isSpinning = false;
 
-  InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
   bool _canSpinAgain = false;
 
@@ -41,9 +38,10 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
       vsync: this,
     );
 
-    _rotation = Tween<double>(begin: 0, end: 2 * pi).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _rotation = Tween<double>(
+      begin: 0,
+      end: 2 * pi,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -55,7 +53,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
       }
     });
 
-    _loadInterstitialAd();
     _loadRewardedAd();
   }
 
@@ -72,45 +69,27 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
 
   void _showRewardedAd() {
     if (_rewardedAd != null) {
-      _rewardedAd!.show(onUserEarnedReward: (ad, reward) {
-        // User earned reward: Spin again!
-        _spinRoulette();
-        // Load next rewarded ad
-        _loadRewardedAd();
-      });
+      _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          // User earned reward: Spin again!
+          //_spinRoulette();
+          // Load next rewarded ad
+          _loadRewardedAd();
+        },
+      );
       _rewardedAd = null;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Ad not ready yet. Try again in a moment!")),
+        const SnackBar(
+          content: Text("Ad not ready yet. Try again in a moment!"),
+        ),
       );
       _loadRewardedAd(); // Try loading again if it wasn't ready
     }
   }
 
-  void _loadInterstitialAd() {
-    AdService().loadInterstitial(
-      onAdLoaded: (ad) {
-        _interstitialAd = ad;
-        _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-          onAdDismissedFullScreenContent: (ad) {
-            ad.dispose();
-            _proceedWithNavigation();
-          },
-          onAdFailedToShowFullScreenContent: (ad, error) {
-            ad.dispose();
-            _proceedWithNavigation();
-          },
-        );
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('InterstitialAd failed to load: $error');
-      },
-    );
-  }
-
   void _proceedWithNavigation() {
-    final players =
-    Provider.of<AppProvider>(context, listen: false).players;
+    final players = Provider.of<AppProvider>(context, listen: false).players;
 
     if (players.isNotEmpty) {
       final random = players[_random.nextInt(players.length)];
@@ -149,19 +128,17 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
       } else {
         selected = players[_random.nextInt(players.length)];
       }
-
       setState(() {
         _selectedPlayer = selected;
         _isSpinning = false;
       });
     });
-
+    _showRewardedAd();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _interstitialAd?.dispose();
     _rewardedAd?.dispose();
     super.dispose();
   }
@@ -171,7 +148,10 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
     final color = widget.color;
 
     return Scaffold(
-      backgroundColor: Color.alphaBlend(Colors.black.withValues(alpha: 0.9), color),
+      backgroundColor: Color.alphaBlend(
+        Colors.black.withValues(alpha: 0.9),
+        color,
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -194,8 +174,14 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                     animation: _rotation,
                     builder: (context, child) {
                       // Rotate the shadow slightly relative to the wheel rotation
-                      final double shadowOffset = 6 + 4 * sin(_rotation.value * 3); // oscillates between 2-10 px
-                      final double shadowBlur = 12 + 4 * cos(_rotation.value * 2);  // oscillates blur
+                      final double shadowOffset =
+                          6 +
+                          4 *
+                              sin(
+                                _rotation.value * 3,
+                              ); // oscillates between 2-10 px
+                      final double shadowBlur =
+                          12 + 4 * cos(_rotation.value * 2); // oscillates blur
 
                       return Transform.rotate(
                         angle: _rotation.value,
@@ -208,7 +194,7 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                             gradient: RadialGradient(
                               colors: [
                                 color.withValues(alpha: 0.3),
-                                color.withValues(alpha: 0.05)
+                                color.withValues(alpha: 0.05),
                               ],
                             ),
                             boxShadow: [
@@ -222,17 +208,13 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                           child: Center(
                             child: Text(
                               "🍸",
-                              style: TextStyle(
-                                fontSize: 64,
-                                color: color,
-                              ),
+                              style: TextStyle(fontSize: 64, color: color),
                             ),
                           ),
                         ),
                       );
                     },
                   ),
-
                 ),
               ),
 
@@ -253,36 +235,35 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
 
               // Spin Button
               ElevatedButton(
-                onPressed: _isSpinning
-                    ? null
-                    : () {
-                  if (_selectedPlayer == "Tap spin to find out! 🍸" ||
-                      _selectedPlayer == "Spinning..." ||
-                      _selectedPlayer == "Add players first 🍹") {
-                    // Still in spin state → start spinning
-                    _spinRoulette();
-                  } else {
-                    if (_interstitialAd != null) {
-                      _interstitialAd!.show();
-                      _interstitialAd = null; // Clear reference
-                    } else {
-                      _proceedWithNavigation();
-                    }
-                  }
-                },
+                onPressed:
+                    _isSpinning
+                        ? null
+                        : () {
+                          if (_selectedPlayer == "Tap spin to find out! 🍸" ||
+                              _selectedPlayer == "Spinning..." ||
+                              _selectedPlayer == "Add players first 🍹") {
+                            // Still in spin state → start spinning
+                            _spinRoulette();
+                          } else {
+                            _proceedWithNavigation();
+                          }
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 60,
+                    vertical: 16,
+                  ),
                 ),
                 child: Text(
                   _isSpinning
                       ? ""
                       : (_selectedPlayer == "Tap spin to find out! 🍸" ||
-                      _selectedPlayer == "Spinning..." ||
-                      _selectedPlayer == "Add players first 🍹")
+                          _selectedPlayer == "Spinning..." ||
+                          _selectedPlayer == "Add players first 🍹")
                       ? "SPIN 🍹"
                       : "NEXT 👉",
                   style: GoogleFonts.poppins(
@@ -292,24 +273,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                   ),
                 ),
               ),
-
-              if (_canSpinAgain && _selectedPlayer != "Tap spin to find out! 🍸") ...[
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: _showRewardedAd,
-                  icon: const Icon(Icons.refresh, color: Colors.white),
-                  label: Text(
-                    "Spin Again (Watch Ad)",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-
-
-
               const SizedBox(height: 20),
               const AdBanner(),
             ],

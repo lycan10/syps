@@ -29,73 +29,46 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
   @override
   dispose() {
-    _interstitialAd?.dispose();
     super.dispose();
   }
-  InterstitialAd? _interstitialAd;
 
   @override
   void initState() {
     super.initState();
     _questions = _getQuestionsForCategory(widget.category);
     _groupQuestions = _getGroupQuestions();
-    _loadInterstitialAd();
-
     // Show the first question WITHOUT triggering roulette
     _setNextQuestion(first: true);
   }
 
-  void _loadInterstitialAd() {
-    AdService().loadInterstitial(
-      onAdLoaded: (ad) {
-        _interstitialAd = ad;
-        _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-          onAdDismissedFullScreenContent: (ad) {
-            ad.dispose();
-            _navigateToRoulette();
-            _loadInterstitialAd(); // Load next ad
-          },
-          onAdFailedToShowFullScreenContent: (ad, error) {
-            ad.dispose();
-            _navigateToRoulette();
-            _loadInterstitialAd();
-          },
-        );
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('InterstitialAd failed to load: $error');
-      },
-    );
-  }
-
   Future<void> _navigateToRoulette() async {
-      final selectedPlayer = await Navigator.of(context).push(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder:
-              (context, animation, secondaryAnimation) =>
-              DrinkRoulettePage(color: _getCategoryColor(widget.category)),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SharedAxisTransition(
-              animation: animation,
-              secondaryAnimation: secondaryAnimation,
-              transitionType: SharedAxisTransitionType.scaled,
-              child: child,
-            );
-          },
-        ),
-      );
+    final selectedPlayer = await Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder:
+            (context, animation, secondaryAnimation) =>
+                DrinkRoulettePage(color: _getCategoryColor(widget.category)),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+      ),
+    );
 
-      if (selectedPlayer != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _displayedPlayer = selectedPlayer;
-              _currentIndex = _random.nextInt(_questions.length);
-            });
-          }
-        });
-      }
+    if (selectedPlayer != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _displayedPlayer = selectedPlayer;
+            _currentIndex = _random.nextInt(_questions.length);
+          });
+        }
+      });
+    }
   }
 
   /// Individual questions for each category
@@ -103,26 +76,26 @@ class _QuestionsPageState extends State<QuestionsPage> {
     switch (category) {
       case "Dirty":
         return [
-    "What's the hottest place on your body that you'd like me to lick?",
-    "What's the naughtiest thing you've ever done?",
-    "What's the most embarrassing thing that's happened to you while having sex?",
-    "What's the kinkiest thing you've ever tried?",
-    "What's your favorite sex position?",
-    "What's the most erotic thing someone has ever said to you?",
-    "What's the naughtiest thing you've ever done with a partner?",
-    "What's the most erotic thing you've ever seen?",
-    "What's the hottest thing you've ever done with a partner?",
-    "What's the naughtiest place you've ever had sex?",
-    "What's the most embarrassing thing that's happened to you during sex?",
-    "What's the kinkiest thing you've ever wanted to try?",
-    "What's the most erotic thing you've ever heard?",
-    "What's the naughtiest thing you've ever done alone?",
-    "What's the hottest thing you've ever imagined?",
-    "What's the most embarrassing thing you've ever done during sex?",
-    "What's the kinkiest thing you've ever done with a partner?",
-    "What's the most erotic thing you've ever seen?",
-    "What's the naughtiest thing you've ever wanted to do?",
-    "What's the most embarrassing thing that's happened to you while having sex?",
+          "What's the hottest place on your body that you'd like me to lick?",
+          "What's the naughtiest thing you've ever done?",
+          "What's the most embarrassing thing that's happened to you while having sex?",
+          "What's the kinkiest thing you've ever tried?",
+          "What's your favorite sex position?",
+          "What's the most erotic thing someone has ever said to you?",
+          "What's the naughtiest thing you've ever done with a partner?",
+          "What's the most erotic thing you've ever seen?",
+          "What's the hottest thing you've ever done with a partner?",
+          "What's the naughtiest place you've ever had sex?",
+          "What's the most embarrassing thing that's happened to you during sex?",
+          "What's the kinkiest thing you've ever wanted to try?",
+          "What's the most erotic thing you've ever heard?",
+          "What's the naughtiest thing you've ever done alone?",
+          "What's the hottest thing you've ever imagined?",
+          "What's the most embarrassing thing you've ever done during sex?",
+          "What's the kinkiest thing you've ever done with a partner?",
+          "What's the most erotic thing you've ever seen?",
+          "What's the naughtiest thing you've ever wanted to do?",
+          "What's the most embarrassing thing that's happened to you while having sex?",
           "Never have I ever...licked someone's toes during sex.",
           "Never have I ever...had a threesome.",
           "Never have I ever...tried anal sex.",
@@ -151,7 +124,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
           "Never have I ever...had a threesome with a group of people.",
           "Never have I ever...had a threesome with a celebrity.",
           "Never have I ever...had a threesome with a coworker.",
-          "Never have I ever...had a threesome with a friend."
+          "Never have I ever...had a threesome with a friend.",
         ];
       case "Icebreaker":
         return [
@@ -444,7 +417,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
       "Take a sip if you regret a tattoo or piercing you currently have.",
       "Take a sip if you've posted something on social media and quickly deleted it out of embarrassment.",
       "Take a sip if you've seriously messed up a meal you were cooking for other people."
-      "Everyone who’s ever lied about their location — drink.",
+          "Everyone who’s ever lied about their location — drink.",
       "If you’ve ever sent a message you had to delete fast — sip.",
       "Everyone who’s ever said ‘I don’t care’ when they *did* — drink.",
       "If you’ve ever stalked your crush’s new flame, drink twice.",
@@ -468,12 +441,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
     // 🎲 Open roulette only after first question
     if (goToRoulette) {
-      if (_interstitialAd != null) {
-        _interstitialAd!.show();
-        _interstitialAd = null; // Clear reference
-      } else {
-        _navigateToRoulette();
-      }
+      _navigateToRoulette();
       return;
     }
 
