@@ -28,7 +28,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
   bool _isSpinning = false;
 
   RewardedAd? _rewardedAd;
-  bool _canSpinAgain = false;
 
   @override
   void initState() {
@@ -48,7 +47,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
         _controller.reset();
         setState(() {
           _isSpinning = false;
-          _canSpinAgain = true; // Allow spin again after spin completes
         });
       }
     });
@@ -67,24 +65,29 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
     );
   }
 
-  void _showRewardedAd() {
+  void _showRewardedAdAndNavigate() {
+    final players = Provider.of<AppProvider>(context, listen: false).players;
+
     if (_rewardedAd != null) {
       _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
-          // User earned reward: Spin again!
-          //_spinRoulette();
-          // Load next rewarded ad
+          // User watched the ad, now navigate
+          _proceedWithNavigation();
+          // Load next rewarded ad for future use
           _loadRewardedAd();
         },
       );
       _rewardedAd = null;
     } else {
+      // If ad is not ready, proceed anyway and show a message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Ad not ready yet. Try again in a moment!"),
+          content: Text("Ad not ready, proceeding anyway!"),
+          duration: Duration(seconds: 2),
         ),
       );
-      _loadRewardedAd(); // Try loading again if it wasn't ready
+      _proceedWithNavigation();
+      _loadRewardedAd(); // Try loading again
     }
   }
 
@@ -112,7 +115,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
     setState(() {
       _isSpinning = true;
       _selectedPlayer = "Spinning...";
-      _canSpinAgain = false;
     });
 
     _controller.repeat(); // start spinning continuously
@@ -133,7 +135,6 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
         _isSpinning = false;
       });
     });
-    _showRewardedAd();
   }
 
   @override
@@ -242,10 +243,11 @@ class _DrinkRoulettePageState extends State<DrinkRoulettePage>
                           if (_selectedPlayer == "Tap spin to find out! 🍸" ||
                               _selectedPlayer == "Spinning..." ||
                               _selectedPlayer == "Add players first 🍹") {
-                            // Still in spin state → start spinning
+                            // Initial state → start spinning
                             _spinRoulette();
                           } else {
-                            _proceedWithNavigation();
+                            // Result shown → show ad then navigate
+                            _showRewardedAdAndNavigate();
                           }
                         },
                 style: ElevatedButton.styleFrom(
