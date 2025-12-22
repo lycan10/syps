@@ -1,4 +1,4 @@
-package com.example.sips
+package com.syps247
 
 import io.flutter.embedding.android.FlutterActivity
 

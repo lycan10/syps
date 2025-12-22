@@ -104,7 +104,7 @@ class _WelcomePageState extends State<WelcomePage> {
               Column(
                 children: [
                   Text(
-                    "🍸 Sips",
+                    "Syps 247",
                     style: GoogleFonts.poppins(
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
@@ -142,7 +142,7 @@ class _WelcomePageState extends State<WelcomePage> {
               Column(
                 children: [
                   Text(
-                    "Welcome to Sips!",
+                    "Welcome to Syps 247!",
                     style: GoogleFonts.poppins(
                       fontSize: 23,
                       fontWeight: FontWeight.w700,
@@ -177,7 +177,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                   onPressed: _handleGetStarted,
                   child: Text(
-                    "Let's Get Sippin' 🍻",
+                    "Let's Get Syppin' 🍻",
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
